@@ -6,8 +6,15 @@ It includes:
 - a Small server running on Linux and a bunch of dockerized app
 - one (at the moment) esp32 node that reports data to this server
 
+## Server
 
-# TODO
-- README to all subfolder with link each other
-- ESP32 Firmware improvement
-- Grouping all docker container into one dockerfile
+[link](server)
+
+## ESP32 node
+
+[link](esp32Node/README.md)
+
+## TODO
+- [x] README to all subfolder with link each other
+- [ ] ESP32 Firmware improvement
+- [ ] Grouping all docker container into one dockerfile
