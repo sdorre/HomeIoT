@@ -1,12 +1,6 @@
 #ifndef SHT20_H
 #define SHT20_H
 
-#include <driver/i2c.h>
-#include <esp_log.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include "sdkconfig.h"
-
 /**
  * Lets not the pinout of the SHT20 once and for all !!
  * BLUE   = GND

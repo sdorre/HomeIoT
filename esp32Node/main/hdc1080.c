@@ -21,10 +21,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <driver/i2c.h>
+#include <esp_log.h>
+#include "freertos/task.h"
+
 #include "hdc1080.h"
 
 static char tag[] = "hdc1080";
-
 
 uint16_t HDC1080_readData(uint8_t reg);
 

@@ -13,15 +13,16 @@
 #include "nvs_flash.h"
 #include "esp_event_loop.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 
- #include <esp_sleep.h>
+#include <driver/i2c.h>
+#include <esp_log.h>
+#include <esp_sleep.h>
+
 // #include "bmp180.h"
 #include "hdc1080.h"
-#include "sht20.h"
+// #include "sht20.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -173,16 +174,17 @@ void app_main()
     int_temp_data = HDC1080_readTemperature();
     // float data = SHT20_readTemperature();
     ESP_LOGI(tag, "Temperature %f", int_temp_data);
+
     int_humid_data = HDC1080_readHumidity();
     // data = SHT20_readHumidity();
     ESP_LOGI(tag, "Himidity %f", int_humid_data);
 
-    ext_temp_data = SHT20_readTemperature();
-    // float data = SHT20_readTemperature();
-    ESP_LOGI(tag, "Ext Temperature %f", ext_temp_data);
-    ext_humid_data = SHT20_readHumidity();
-    // data = SHT20_readHumidity();
-    ESP_LOGI(tag, "Ext Himidity %f", ext_humid_data);
+    // ext_temp_data = SHT20_readTemperature();
+    // // float data = SHT20_readTemperature();
+    // ESP_LOGI(tag, "Ext Temperature %f", ext_temp_data);
+    // ext_humid_data = SHT20_readHumidity();
+    // // data = SHT20_readHumidity();
+    // ESP_LOGI(tag, "Ext Himidity %f", ext_humid_data);
 
     mqtt_app_start();
 

@@ -21,9 +21,48 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <driver/i2c.h>
+#include <esp_log.h>
+
 #include "sht20.h"
 
 static char tag[] = "sht20";
+
+void i2c_master_write_slave_reg(i2c_port_t i2c_num, uint8_t adress, uint8_t reg, uint8_t *data, uint8_t data_length)
+{
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+	i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, (adress << 1) | I2C_MASTER_WRITE, 1 /* expect ack */);
+	i2c_master_write_byte(cmd, reg, 1);
+
+	if ((data != NULL) || (data_length > 0)) {
+		while(data_length > 0) {
+			i2c_master_write_byte(cmd, *data, 1);
+			data++;
+			data_length--;
+		}
+	}
+
+	i2c_master_stop(cmd);
+	int res = i2c_master_cmd_begin(i2c_num, cmd, 1000/portTICK_PERIOD_MS);
+	i2c_cmd_link_delete(cmd);
+}
+
+int i2c_master_read_slave(i2c_port_t i2c_num, uint8_t adress, uint8_t *data, uint8_t data_length)
+{
+	int res;
+
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+	i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, (adress << 1) | I2C_MASTER_READ, 1 /* expect ack */);
+	i2c_master_read_byte(cmd, &data[0], 0);
+	i2c_master_read_byte(cmd, &data[1], 1);
+	i2c_master_stop(cmd);
+	res = i2c_master_cmd_begin(i2c_num, cmd, 1000/portTICK_PERIOD_MS);
+	i2c_cmd_link_delete(cmd);
+
+	return res;
+}
 
 void SHT20_setResolution(sht20_resolution_t humidity, sht20_resolution_t temperature)
 {
@@ -33,10 +72,10 @@ void SHT20_setResolution(sht20_resolution_t humidity, sht20_resolution_t tempera
 sht20_register_t SHT20_readRegister()
 {
 	sht20_register_t reg = { 0 };
-	int res = i2c_master_read_slave_reg(I2C_NUM_0, SHT20_ADDRESS, SHT20_REGISTER_READ, &reg, sizeof(reg));
-	if (res != ESP_OK) {
-	   ESP_LOGW(tag, "READ Error 0x%x", res);
-    }
+	// int res = i2c_master_read_slave_reg(I2C_NUM_0, SHT20_ADDRESS, SHT20_REGISTER_READ, &reg, sizeof(reg));
+	// if (res != ESP_OK) {
+	//    ESP_LOGW(tag, "READ Error 0x%x", res);
+    // }
 	return reg;
 }
 

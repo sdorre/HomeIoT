@@ -1,13 +1,6 @@
 #ifndef HDC1080_H
 #define HDC1080_H
 
-#include <driver/i2c.h>
-#include <esp_log.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include "sdkconfig.h"
-
-
 #define HDC1080_ADDRESS 0x40
 
 typedef enum
