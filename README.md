@@ -6,8 +6,7 @@ It includes:
 - a Small server running on Linux and a bunch of dockerized app
 - one (at the moment) esp32 node that reports data to this server
 
-
-## Server
+## Server
 
 [link](server)
 
@@ -20,4 +19,4 @@ It includes:
 ## TODO
 - [x] README to all subfolder with link each other
 - [ ] ESP32 Firmware improvement
-- [ ] Grouping all docker container into one dockerfile
+- [ ] Grouping all docker container into one dockerfile
