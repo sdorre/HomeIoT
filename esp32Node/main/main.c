@@ -11,7 +11,7 @@
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 
 #include "driver/gpio.h"
 #include "sdkconfig.h"
@@ -40,36 +40,38 @@
 static char tag[] = "IoTHome";
 
 static EventGroupHandle_t wifi_event_group;
-const static int CONNECTED_BIT = BIT0;
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT      BIT1
 
 static float int_temp_data = 0;
 static float int_humid_data = 0;
 static float ext_temp_data = 0;
 static float ext_humid_data = 0;
 
-static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                                int32_t event_id, void* event_data)
 {
-    switch (event->event_id) {
+    ESP_LOGI(tag, "wifi_event_handler received eventId %x, eventb ase %s", event_id, event_base);
+    switch (event_id) {
         case SYSTEM_EVENT_STA_START:
             esp_wifi_connect();
             break;
         case SYSTEM_EVENT_STA_GOT_IP:
-            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+        case WIFI_EVENT_STA_CONNECTED:
+            xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
 
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
             esp_wifi_connect();
-            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+            xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
             break;
         default:
             break;
     }
-    return ESP_OK;
 }
 
 static void wifi_init(void)
 {
-    tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -79,14 +81,26 @@ static void wifi_init(void)
         .sta = {
             .ssid = CONFIG_WIFI_SSID,
             .password = CONFIG_WIFI_PASSWORD,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_LOGI(tag, "start the WIFI SSID:[%s] password:[%s]", "CONFIG_WIFI_SSID", "******");
+
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_LOGI(tag, "Waiting for wifi");
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(tag, "connected to ap SSID:%s password:%s",
+                 CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+    } else if (bits & WIFI_FAIL_BIT) {
+        ESP_LOGI(tag, "Failed to connect to SSID:%s, password:%s",
+                 CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+    } else {
+        ESP_LOGE(tag, "UNEXPECTED EVENT");
+    }
 }
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
@@ -124,6 +138,8 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
         case MQTT_EVENT_ERROR:
             ESP_LOGI(tag, "MQTT_EVENT_ERROR");
             break;
+        case MQTT_EVENT_ANY:
+            break;
     }
     return ESP_OK;
 }
@@ -155,7 +171,22 @@ void app_main()
     esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
     esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
 
-    nvs_flash_init();
+    //Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    // Get the derived MAC address for each network interface
+    // Usefull to get set a static IP on the router
+    // uint8_t derived_mac_addr[6] = {0};
+    // ESP_ERROR_CHECK(esp_read_mac(derived_mac_addr, ESP_MAC_WIFI_STA));
+    // ESP_LOGI("WIFI_STA MAC", "0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
+    //          derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
+    //          derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
+
     wifi_init();
 
     i2c_config_t conf;
