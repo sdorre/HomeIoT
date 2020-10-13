@@ -73,7 +73,35 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 static void wifi_init(void)
 {
     wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
+
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    // Create "almost" default station, but with un-flagged DHCP client
+    esp_netif_inherent_config_t netif_cfg;
+    memcpy(&netif_cfg, ESP_NETIF_BASE_DEFAULT_WIFI_STA, sizeof(netif_cfg));
+    netif_cfg.flags &= ~ESP_NETIF_DHCP_CLIENT;
+
+    esp_netif_ip_info_t ip_config = {};
+    netif_cfg.ip_info = &ip_config;
+    esp_netif_set_ip4_addr(&netif_cfg.ip_info->ip, 192, 168, 0, 11);
+    esp_netif_set_ip4_addr(&netif_cfg.ip_info->gw, 192, 168, 0, 1);
+    esp_netif_set_ip4_addr(&netif_cfg.ip_info->netmask, 255, 255, 255, 0);
+
+    esp_netif_config_t cfg_sta = {
+            .base = &netif_cfg,
+            .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_STA,
+    };
+    esp_netif_t *netif_sta = esp_netif_new(&cfg_sta);
+    assert(netif_sta);
+    ESP_ERROR_CHECK(esp_netif_attach_wifi_station(netif_sta));
+    ESP_ERROR_CHECK(esp_wifi_set_default_wifi_sta_handlers());
+
+    // ...and stop DHCP client (to be started separately if the station were promoted to root)
+    ESP_ERROR_CHECK(esp_netif_dhcpc_stop(netif_sta));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
@@ -226,8 +254,6 @@ void app_main()
     // xTaskCreate(&task_sht20, "blink_task", 2048, NULL, 5, NULL);
 }
 
-// TODO Check if DHCP can be disabled
-// TODO assign static IP from the router
 // TODO optimize sleep sequence (could we disable WIFI ?)
 // TODO fetch data without sending them. fetch data 9 times without activating Wifi and MQTT. the 10th time only start sending it.
 // TODO
