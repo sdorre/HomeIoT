@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS
+        "bmp180.c"
+        "hdc1080.c"
+        "sht20.c"
+        "ads1115.c"
+        "ds3231.c"
+        "at24c32.c"
+    INCLUDE_DIRS 
+        ".")
