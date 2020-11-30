@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  mqtt:
+    image: eclipse-mosquitto
+    restart: always
+    ports:
+      - '1883:1883'
+  influx-db:
+    image: influxdb
+    restart: always
+    volumes:
+      - /srv/iothome/influxdb:/var/lib/influxdb
+    ports: 
+      - '8086:8086'
+  grafana:
+    image: grafana
+    restart: always
+    user: $(id -u)
+    volumes: 
+      - /srv/iothome/grafana:/var/lib/grafana
+    ports: 
+      - '3000:3000'
+  telegraf:
+    image: telegraf
+    restart: always
+    volumes: 
+      - /srv/iothome/telegraf.conf:/etc/telegraf/telegraf.conf:ro

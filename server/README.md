@@ -15,7 +15,21 @@ Small Server at home gathering all data and showing everything on a Web page
 - docker run -d -p 3000:3000 --restart always --user $(id -u) -v /srv/iothome/grafana:/var/lib/grafana grafana/grafana
 - docker run -d --restart always -v /srv/iothome/telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
 
+## Setup with docker compose 
+
+- `sudo USER_UID=$(id -u) docker-compose up`
+
+### Installation note
+
+- I need to create `/srv/iothome` and the subfolders `grafana` and `influxdb` with the user permissions. 
+so : `sudo chown linaro /srv/iothome` and `sudo chown USER /srv/iothome/grafana`
+
+### Usage note
+
+- grafana web interface accessible via : http://<ip-address>:3000
+- grafana default user/passwd : admin/admin
 
 ## TODO
 - [x] Upload first draft
-- [ ] Dockerfile
+- [x] Dockerfile
+- 
