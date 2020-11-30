@@ -113,7 +113,7 @@ double HDC1080_readTemperature() {
 	int res = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000/portTICK_PERIOD_MS);
 	i2c_cmd_link_delete(cmd);
 
-	vTaskDelay(15/portTICK_PERIOD_MS);
+	vTaskDelay(pdMS_TO_TICKS(20));
 
 	uint16_t rawT;
 	uint8_t msb;

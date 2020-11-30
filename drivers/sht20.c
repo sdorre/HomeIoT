@@ -72,10 +72,11 @@ void SHT20_setResolution(sht20_resolution_t humidity, sht20_resolution_t tempera
 sht20_register_t SHT20_readRegister()
 {
 	sht20_register_t reg = { 0 };
-	// int res = i2c_master_read_slave_reg(I2C_NUM_0, SHT20_ADDRESS, SHT20_REGISTER_READ, &reg, sizeof(reg));
-	// if (res != ESP_OK) {
-	//    ESP_LOGW(tag, "READ Error 0x%x", res);
-    // }
+	i2c_master_write_slave_reg(I2C_NUM_0, SHT20_ADDRESS, SHT20_REGISTER_READ, NULL, 0);
+	int res = i2c_master_read_slave(I2C_NUM_0, SHT20_ADDRESS, &reg, sizeof(reg));
+	if (res != ESP_OK) {
+	   ESP_LOGW(tag, "READ Error 0x%x", res);
+    }
 	return reg;
 }
 
