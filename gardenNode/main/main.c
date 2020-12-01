@@ -61,7 +61,7 @@ static void sd_card_init_and_write()
     // If format_if_mount_failed is set to true, SD card will be partitioned and formatted
     // in case when mounting fails.
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
+        .format_if_mount_failed = true,
         .max_files = 5
     };
 
@@ -95,7 +95,7 @@ static void sd_card_init_and_write()
     at24c32_read(0, buffer, 4096);
 
     for (int i=0; i<128; i+=2) {
-        fprintf(f, "%s%s\n", (char*)&buffer[i * 32],(char*)&buffer[i * 32 + 1]);
+        fprintf(f, "%s%s\n", (char*)&buffer[i * 32],(char*)&buffer[(i+1) * 32]);
     }
 
     fclose(f);
@@ -120,8 +120,8 @@ void app_main()
 
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = 21; // 13;		// could use 16
-    conf.scl_io_num = 22; // 16;		// could use 17
+    conf.sda_io_num = 13;
+    conf.scl_io_num = 16;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = 400000;
@@ -182,16 +182,16 @@ void app_main()
     // ESP_LOGI(tag, "InputMultiplexerConfig 0x%x", reg.InputMultiplexerConfig);
     // ESP_LOGI(tag, "DataRate 0x%x", reg.DataRate);
 
-    /* Output human-readable time */
+    // /* Output human-readable time */
     struct tm tmp;
     static char data_buf[32];
 
     /* If 'now' is not valid */
-    tmp.tm_year = 120;
-    tmp.tm_mon = 11;
-    tmp.tm_mday = 1;
-    tmp.tm_hour = 19;
-    tmp.tm_min = 56;
+    // tmp.tm_year = 120;
+    // tmp.tm_mon = 12;
+    // tmp.tm_mday = 1;
+    // tmp.tm_hour = 22;
+    // tmp.tm_min = 21;
 
     // ds3231_setTime(&tmp);
 
