@@ -65,15 +65,15 @@ int i2c_master_read_slave(i2c_port_t i2c_num, uint8_t adress, uint8_t *data, uin
 
 ads1115_register_t ADS1115_readRegister()
 {
-	ads1115_register_t regi = { 0 };
-	uint8_t reg[2];
+	ads1115_register_t reg = { 0 };
 	i2c_master_write_slave_reg(I2C_NUM_0, ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONFIG, NULL, 0);
 	int res = i2c_master_read_slave(I2C_NUM_0, ADS1115_ADDRESS_ADDR_GND, &reg, sizeof(reg));
 	if (res != ESP_OK) {
 	   ESP_LOGW(tag, "READ Error 0x%x", res);
     }
-	ESP_LOGW(tag, "Reading Registers 0x%x 0x%x", reg[0], reg[1]);
-	return regi;
+	ESP_LOGW(tag, "Reading Registers 0x%x", reg.rawData);
+
+	return reg;
 }
 
 void ADS1115_writeRegister(ads1115_register_t reg)

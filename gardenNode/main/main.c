@@ -187,11 +187,11 @@ void app_main()
     static char data_buf[32];
 
     /* If 'now' is not valid */
-    // tmp.tm_year = 120;
-    // tmp.tm_mon = 12;
-    // tmp.tm_mday = 1;
-    // tmp.tm_hour = 22;
-    // tmp.tm_min = 21;
+    // tmp.tm_year = 121;
+    // tmp.tm_mon = 7; // 0 being january
+    // tmp.tm_mday = 19;
+    // tmp.tm_hour = 20;
+    // tmp.tm_min = 52;
 
     // ds3231_setTime(&tmp);
 
@@ -227,7 +227,9 @@ void app_main()
 
     ESP_LOGI(tag, "Done %d times", restart_counter);
 
-    esp_sleep_enable_timer_wakeup(15 * 60 * 1000000); // 15min
+    esp_sleep_enable_timer_wakeup(15 * 60 * 1000 * 1000); // 10sec
+
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
     ESP_LOGI(tag, "Let's go to sleep");
     esp_deep_sleep_start();
 }
